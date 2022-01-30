@@ -1,20 +1,54 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class HTMLGenerator {
-    private static final String ANSWER = "\t\t<p> \n\t\t\t%s \n\t\t</p>\n";
-    private static final String SECTION = "\t\t<div class=\"section\"><h2>";
+    private static final String SECTION =
+            """
+						<section>
+							<h2>$sectionName$</h2>
+			$sectionContent$            </section>
+			""";
+    //"\t\t<div class=\"section\"><h2>";
     private static final String SOURCE_FILE = "src" + File.separator + "read.txt";
     private static final String FOLDER = "Webpages"+File.separator;
-
+    private static final String html =
+            """
+			<!DOCTYPE html>
+			<html lang="en">
+			$head$
+			$body$
+			</html>
+			""";
+    private static final String head =
+            """
+				<head>
+					<title>$name$</title>
+					<meta http-equiv=Content-Type content="text/html; charset=UTF-8">
+					<link href="../../src/styling.css" rel="stylesheet" />
+				</head>
+			""";
+    private static final String body =
+            """
+				<body>
+					<main>
+						<h1>$collegeName$</h1>
+			$admissions$
+			$finaid$
+			$studlife$
+			$other$
+			$contact$
+			$aid$
+					</main>
+				</body>
+			""";
+    
     /**
      *
      */
     public static void main(String[] args)  {
-
+        
         Scanner sc = null;
         try {
             sc = new Scanner(new File(SOURCE_FILE));
@@ -22,187 +56,171 @@ public class HTMLGenerator {
             e.printStackTrace();
             System.exit(1);
         }
-
+        
         sc.useDelimiter(";");
-
+        
         new File("Webpages").mkdirs();
         int numColleges = 0;
         while (sc.hasNext()) {
-            try {
-                nextCollege(sc);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
+			nextCollege(sc);
             numColleges++;
         }
         sc.close();
-
+        
         // confirmation
         System.out.println("finished");
         System.out.println(numColleges + " colleges processed");
     }
-
+    
     /**
      *
      */
-    private static void nextCollege(Scanner sc) throws FileNotFoundException {
-        String domain = domain(sc);
-        String collegeName = collegeName(sc);
+    private static void nextCollege(Scanner sc){
+        String domain = sc.next().trim();
+        String collegeName = sc.next().trim();
         // create folder for each University after domain
         new File(FOLDER + domain).mkdirs();
-        PrintWriter file = new PrintWriter(String.format("%s%s%s%s.html", FOLDER, domain, File.separator, collegeName));
-        //All Universities that redirect will have their name written as Example University(r)
-        //The admission field will be used for the URL and all other fields will be skipped
-        if (collegeName.contains("(r)")) { //if the name contains our identifier
-            redirect(collegeName.replace("(r)", ""), sc.next(), file);
-            for (int i = 0; i < 4; i++)
-                sc.next();
-            sc.nextLine();
-        }
-        else {//for the pages that don't redirect(most pages), we build a page using its content
-            file.print("<!DOCTYPE html>\n<html lang=\"en\">\n"
-                    + "\t<head>"
-                    + String.format("%n\t\t<title>%s</title>%n", collegeName)
-                    + """
-                <meta http-equiv=Content-Type content="text/html; charset=UTF-8">
-                <link href="../../src/styling.css" rel="stylesheet" />
-            </head>
-                
-            <body>
-        """ + "\t\t<div class=\"collegeName\">" + collegeName + "</div>\n");
-            printSection(sc, file, "Admissions Information");
-            printSection(sc, file, "Financial Aid");
-            printSection(sc, file, "Student Life");
-            merger(sc, file);
-            special(sc, file);
-            aid(sc, file);
-            file.print("\n\t</body>\n</html>");
-        }
-        file.close();
-    }
-
-    public static void redirect (String collegeName, String url, PrintWriter file){
-        file.print("""
-    <html lang="en">
-    <head>
-    """ + "\t\t<meta http-equiv=\"refresh\" content=\"5;url=" + url + "/\">\n" +
-                """
-                <title>
-                Presidents Alliance Policy Database
-                </title>
-                </head>
-                <body>
-                <div style="text-align:center;">
-                <div style="width:90%;
-                height: 100px;
-                display:inline-block;">
-                <h1><span style="color: black;">""" + "You are being redirected to " + collegeName + "'s website</span></h1>\n"
-                + """
-    </div>
-    </div>
-    </body>
-    </html>
-    """);
-    }
-
-    private static String domain(Scanner sc) {
-        return sc.next().trim();
-    }
-
-    private static String collegeName(Scanner sc) {
-        return sc.next().trim();
-    }
-
-    private static void printLine(PrintWriter file, Scanner scan) {
-        String wordsToPass;
-        int holdPosition;
-        while (scan.hasNext()) {
-            wordsToPass = scan.nextLine().trim();
-            holdPosition = 0;
-            if (wordsToPass.length() > 1){
-                if (wordsToPass.contains("?")) {
-                    flushListOnHold(file);
-                    for (int i = 0; i < wordsToPass.length(); i++)
-                        if (wordsToPass.charAt(i) == '?') {
-                            question(wordsToPass.substring(holdPosition, i + 1), file);
-                            holdPosition = i + 1;
-                        }
-                }
-                if (holdPosition<wordsToPass.length())
-                    answer(wordsToPass.substring(holdPosition), file);
-
+        try (PrintWriter file = new PrintWriter(String.format("%s%s%s%s.html", FOLDER, domain, File.separator, collegeName))){
+            //All Universities that redirect will have their name written as Example University(r)
+            //The admission field will be used for the URL and all other fields will be skipped
+            if (collegeName.contains("(r)")) { //if the name contains our identifier
+                redirect(collegeName.replace("(r)", ""), sc.next(), file);
+                for (int i = 0; i < 4; i++)//skips the rest of the fields
+                    sc.next();
+                sc.nextLine();
             }
+            else //for the pages that don't redirect(most pages), we build a page using its content
+                file.print(html
+                        .replace("$head$", head
+                                .replace("$name$", collegeName))
+                        .replace("$body$\n", body
+                                .replace("$collegeName$", collegeName)
+                                .replace("$admissions$", analyzeSection(sc, "Admissions Information"))
+                                .replace("$finaid$", analyzeSection(sc, "Financial Aid Policies"))
+                                .replace("$studlife$", analyzeSection(sc, "Student Life"))
+                                .replace("$other$", merger(sc))
+                                .replace("$contact$", special(sc))
+                                .replace("$aid$", aid(sc))
+                        ).trim());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
     }
-
-    private static void printSection(Scanner sc, PrintWriter file, String sectionName) {
-        flushListOnHold(file);
-        String field = sc.next();
-        Scanner scan = new Scanner(field);
-        if (scan.hasNext()){
-            file.print(SECTION + sectionName + "</h2></div>\n");
-            printLine(file, scan);
-        }
-        if (listOnHold!=null){
-            file.printf(ANSWER, listOnHold + "\n\t\t\t</ul>");
-            listOnHold = null;
-        }
-        scan.close();
+    
+    private static void redirect (String collegeName, String url, PrintWriter file){
+        String temp =
+                html
+                        .replace("$head$",
+                                """
+								<head>
+									<title>Presidents Alliance Policy Database</title>
+									<meta http-equiv=Content-Type content="text/html; charset=UTF-8">
+									<meta http-equiv="refresh" content="0; url='$url$'" />
+									<link href="../../src/styling.css" rel="stylesheet" />
+								</head>
+								""")
+                        .replace("$body$\n",
+                                """
+								<body style="
+									background: #191A19;
+									display: flex;\s
+									align-items: center;\s
+									width: 80vw;\s
+									height: 100vh;
+									justify-content: center;\s
+									margin: auto;
+									position: relative;
+									top: -1em">
+									<span style="
+										color: #4E9F3D;\s
+										text-align: center;\s
+										font-size: 5em">
+										You are being redirected to $collegeName$'s website
+									</span>
+									<p> Please follow <a href="$url$">this link</a> if you are not redirected immediately.
+								</body>
+								""")
+                        .replace("$collegeName$", collegeName)
+                        .replace("$url$", url);
+        file.print(temp);
     }
-
-    private static void merger(Scanner sc, PrintWriter file) {
-        flushListOnHold(file);
-        String field = sc.next();
-        if (field.length() > 2){
-            file.printf(SECTION + "More Information</h2></div>%n");
-            for (String line: Arrays.stream(field.split("\n")).map(String::trim).toArray(String[]::new))
-                if (!line.equals(""))
-                    answer(line, file);
-        }
+    
+    private static String appendField(Scanner sectionScanner) {
+        StringBuilder toAppend = new StringBuilder();
+        sectionScanner.tokens()
+                .map(line -> analyzeLine(line.trim()))
+                .forEach(toAppend::append);
+        
+        return String.valueOf(toAppend);
     }
-
-    private static void aid(Scanner sc, PrintWriter file) {
-        if (sc.nextLine().equalsIgnoreCase("0"))
-            file.print("\t\t<div class=\"aid\">Does not give need based aid</div>");
-        else
-            file.print("\t\t<div class=\"aid\">Gives need-based aid</div>");
+    
+    private static String analyzeLine(String line){
+        StringBuilder analyzedLine = new StringBuilder();
+        int holdPosition = 0;
+        if (line.length() < 1) return "";
+        
+        if (line.contains("?"))
+            for (int i = 0; i < line.length(); i++)
+                if (line.charAt(i) == '?') {
+                    analyzedLine.append(question(line.substring(holdPosition, i + 1)));
+                    holdPosition = i + 1;
+                }
+        
+        if (holdPosition<line.length())
+            analyzedLine.append(answer(line.substring(holdPosition)));
+        
+        return String.valueOf(analyzedLine);
     }
-
-    private static void special(Scanner sc, PrintWriter file) {
-        String field = sc.next();
-        if (field.length() > 2){
-            file.print(SECTION + "Who To Contact</h2></div>\n");
-            file.printf(ANSWER, field);
-        }
+    
+    private static String analyzeSection(Scanner sc, String sectionName) {
+        StringBuilder onHold = new StringBuilder();
+        Scanner sectionScanner = new Scanner(sc.next()).useDelimiter("\n");
+        //take the next Section and turn it into its own scanner
+        
+        if (sectionScanner.hasNext())
+            onHold.append(SECTION
+                    .replace("$sectionName$", sectionName)
+                    .replace("$sectionContent$", appendField(sectionScanner))
+            );
+        
+        sectionScanner.close();
+        return String.valueOf(onHold);
     }
-
-    static String listOnHold = null;
-    private static void answer(String wordsToPass, PrintWriter file) {
-        if (wordsToPass.contains("•"))
-            listify(wordsToPass.replace("•", "").trim());
-//         Print answer to file
-        else {
-            flushListOnHold(file);
-            file.printf(ANSWER, wordsToPass);
-        }
+    
+    private static String merger(Scanner sc) {
+        String sectionString = sc.next().trim();
+        if (sectionString.length() > 2)
+            return
+                    SECTION
+                            .replace("$sectionName$", "More Information")
+                            .replace("$sectionContent$", String.format("\t\t\t\t\t<p>%s</p>\n", sectionString)
+                            );
+        return "";
     }
-
-    private static void flushListOnHold(PrintWriter file) {
-        if (listOnHold != null) {
-            file.printf(ANSWER, listOnHold + "\n\t\t\t</ul>");
-            listOnHold = null;
-        }
+    
+    private static String aid(Scanner sc) {
+        if (sc.nextLine().trim().equalsIgnoreCase("0"))
+            return "\t\t\t<p class=\"aid\">Does not give need-based aid</p>";
+        
+        return "\t\t\t<p class=\"aid\">Gives need-based aid</p>";
     }
-
-    private static void listify(String wordToListify){
-        if (listOnHold == null)
-            listOnHold = String.format("<ul>\n\t\t\t\t<li>%s</li>", wordToListify);
-        else
-            listOnHold += String.format("\n\t\t\t\t<li>%s</li>", wordToListify);
+    
+    private static String special(Scanner sc) {
+        String sectionString = sc.next().trim();
+        if (sectionString.length() > 2)
+            return
+                    (SECTION
+                            .replace("$sectionName$", "Who to Contact")
+                            .replace("$sectionContent$", String.format("\t\t\t\t\t<p>%s</p>\n", sectionString)
+                            ));
+        return "";
     }
-
-    private static void question(String wordsToPass, PrintWriter file) {
-        // Print question to file as Header 3
-        file.printf("\t\t\t<div class=\"question\"><h3>%s</h3></div>%n", wordsToPass);
+    
+    private static String answer(String wordsToPass) {
+        return String.format("\t\t\t\t<p class =\"answer\">%s</p>\n", wordsToPass);
+    }
+    
+    private static String question(String wordsToPass) {
+        return String.format("\t\t\t\t<h3 class=\"question\">%s</h3>\n", wordsToPass);
     }
 }
