@@ -6,66 +6,60 @@ import java.util.Scanner;
 public class HTMLGenerator {
 	private static final String SECTION =
 			"""
-						<section>
-							<h2>$sectionName$</h2>
-			$sectionContent$            </section>
-			""";
+								<section>
+									<h2>$sectionName$</h2>
+					$sectionContent$            </section>
+					""";
 	//"\t\t<div class=\"section\"><h2>";
 	private static final String SOURCE_FILE = "src" + File.separator + "read.txt";
-	private static final String FOLDER = "Webpages"+File.separator;
+	private static final String FOLDER = "Webpages" + File.separator;
 	private static final String html =
 			"""
-			<!DOCTYPE html>
-			<html lang="en">
-			$head$
-			$body$
-			</html>
-			""";
+					<!DOCTYPE html>
+					<html lang="en">
+					$head$
+					$body$
+					</html>
+					""";
 	private static final String head =
 			"""
-				<head>
-					<title>$name$</title>
-					<meta http-equiv=Content-Type content="text/html; charset=UTF-8">
-					<link href="../../src/styling.css" rel="stylesheet" />
-				</head>
-			""";
+						<head>
+							<title>$name$</title>
+							<meta http-equiv=Content-Type content="text/html; charset=UTF-8">
+							<link href="../../src/styling.css" rel="stylesheet" />
+						</head>
+					""";
 	private static final String body =
 			"""
-				<body>
-					<main>
-						<h1>$collegeName$</h1>
-			$admissions$
-			$finaid$
-			$studlife$
-			$other$
-			$contact$
-			$aid$
-					</main>
-				</body>
-			""";
+						<body>
+							<main>
+								<h1>$collegeName$</h1>
+					$admissions$
+					$finaid$
+					$studlife$
+					$other$
+					$contact$
+					$aid$
+							</main>
+						</body>
+					""";
 	
 	/**
 	 *
 	 */
-	public static void main(String[] args)  {
+	public static void main(String[] args) {
+		int numColleges = 0;
 		
-		Scanner sc = null;
-		try {
-			sc = new Scanner(new File(SOURCE_FILE));
+		try (var sc = new Scanner(new File(SOURCE_FILE)).useDelimiter(";")) {
+			new File("Webpages").mkdirs();
+			while (sc.hasNext()) {
+				nextCollege(sc);
+				numColleges++;
+			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		
-		sc.useDelimiter(";");
-		
-		new File("Webpages").mkdirs();
-		int numColleges = 0;
-		while (sc.hasNext()) {
-			nextCollege(sc);
-			numColleges++;
-		}
-		sc.close();
 		
 		// confirmation
 		System.out.println("finished");
@@ -80,7 +74,7 @@ public class HTMLGenerator {
 		String collegeName = sc.next().trim();
 		// create folder for each University after domain
 		new File(FOLDER + domain).mkdirs();
-		try (PrintWriter file = new PrintWriter(String.format("%s%s%s%s.html", FOLDER, domain, File.separator, collegeName))){
+		try (PrintWriter file = new PrintWriter(String.format("%s%s%s%s.html", FOLDER, domain, File.separator, collegeName))) {
 			//All Universities that redirect will have their name written as Example University(r)
 			//The admission field will be used for the URL and all other fields will be skipped
 			if (collegeName.contains("(r)")) { //if the name contains our identifier
@@ -88,8 +82,7 @@ public class HTMLGenerator {
 				for (int i = 0; i < 4; i++)//skips the rest of the fields
 					sc.next();
 				sc.nextLine();
-			}
-			else //for the pages that don't redirect(most pages), we build a page using its content
+			} else //for the pages that don't redirect(most pages), we build a page using its content
 				file.print(html
 						.replace("$head$", head
 								.replace("$name$", collegeName))
@@ -107,39 +100,39 @@ public class HTMLGenerator {
 		}
 	}
 	
-	private static void redirect (String collegeName, String url, PrintWriter file){
+	private static void redirect(String collegeName, String url, PrintWriter file) {
 		String temp =
 				html
 						.replace("$head$",
 								"""
-								<head>
-									<title>Presidents Alliance Policy Database</title>
-									<meta http-equiv=Content-Type content="text/html; charset=UTF-8">
-									<meta http-equiv="refresh" content="0; url='$url$'" />
-									<link href="../../src/styling.css" rel="stylesheet" />
-								</head>
-								""")
+										<head>
+											<title>Presidents Alliance Policy Database</title>
+											<meta http-equiv=Content-Type content="text/html; charset=UTF-8">
+											<meta http-equiv="refresh" content="0; url='$url$'" />
+											<link href="../../src/styling.css" rel="stylesheet" />
+										</head>
+										""")
 						.replace("$body$\n",
 								"""
-								<body style="
-									background: #191A19;
-									display: flex;\s
-									align-items: center;\s
-									width: 80vw;\s
-									height: 100vh;
-									justify-content: center;\s
-									margin: auto;
-									position: relative;
-									top: -1em">
-									<span style="
-										color: #4E9F3D;\s
-										text-align: center;\s
-										font-size: 5em">
-										You are being redirected to $collegeName$'s website
-									</span>
-									<p> Please follow <a href="$url$">this link</a> if you are not redirected immediately.
-								</body>
-								""")
+										<body style="
+											background: #191A19;
+											display: flex;\s
+											align-items: center;\s
+											width: 80vw;\s
+											height: 100vh;
+											justify-content: center;\s
+											margin: auto;
+											position: relative;
+											top: -1em">
+											<span style="
+												color: #4E9F3D;\s
+												text-align: center;\s
+												font-size: 5em">
+												You are being redirected to $collegeName$'s website
+											</span>
+											<p> Please follow <a href="$url$">this link</a> if you are not redirected immediately.
+										</body>
+										""")
 						.replace("$collegeName$", collegeName)
 						.replace("$url$", url);
 		file.print(temp);
@@ -154,7 +147,7 @@ public class HTMLGenerator {
 		return String.valueOf(toAppend);
 	}
 	
-	private static String analyzeLine(String line){
+	private static String analyzeLine(String line) {
 		StringBuilder analyzedLine = new StringBuilder();
 		int holdPosition = 0;
 		if (line.length() < 1) return "";
@@ -169,7 +162,7 @@ public class HTMLGenerator {
 					holdPosition = i + 1;
 				}
 		
-		if (holdPosition<line.length())//If there's anything left in the line after extracting questions
+		if (holdPosition < line.length())//If there's anything left in the line after extracting questions
 			analyzedLine.append(answer(line.substring(holdPosition)));
 		
 		return String.valueOf(analyzedLine);
@@ -209,10 +202,10 @@ public class HTMLGenerator {
 		return "\t\t\t<p class=\"aid\">Gives need-based aid</p>";
 	}
 	
-	private static String listify(String wordToListify){
+	private static String listify(String wordToListify) {
 		StringBuilder onHold = new StringBuilder();
 		boolean currentlyInList = false;
-		for (String wordInCheck: wordToListify.trim().split("\n")) {
+		for (String wordInCheck : wordToListify.trim().split("\n")) {
 			if (wordInCheck.length() < 2) continue;
 			if (currentlyInList)
 				if (wordInCheck.startsWith("•"))
@@ -245,8 +238,6 @@ public class HTMLGenerator {
 	}
 	
 	private static String answer(String wordsToPass) {
-		if (wordsToPass.contains("•"))
-			return listify(wordsToPass);
 		return String.format("\t\t\t\t<p class =\"answer\">%s</p>\n", wordsToPass);
 	}
 	
