@@ -1,17 +1,16 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.Objects;
 import java.util.Scanner;
 
-public class HTMLGenerator {
+public class HTMLParser {
 	private static final String SECTION =
 			"""
 								<section>
 									<h2>$sectionName$</h2>
 					$sectionContent$            </section>
 					""";
-	//"\t\t<div class=\"section\"><h2>";
-	private static final String SOURCE_FILE = "src" + File.separator + "read.txt";
 	private static final String FOLDER = "Webpages" + File.separator;
 	private static final String html =
 			"""
@@ -50,15 +49,12 @@ public class HTMLGenerator {
 	public static void main(String[] args) {
 		int numColleges = 0;
 		
-		try (var sc = new Scanner(new File(SOURCE_FILE)).useDelimiter(";")) {
+		try (var sc = new Scanner(Objects.requireNonNull(HTMLParser.class.getResourceAsStream("data.txt"))).useDelimiter(";")) {
 			new File("Webpages").mkdirs();
 			while (sc.hasNext()) {
 				nextCollege(sc);
 				numColleges++;
 			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			System.exit(1);
 		}
 		
 		// confirmation
