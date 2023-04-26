@@ -1,6 +1,29 @@
-# MSAccess–HTML/Excel Parser (redacted)
-Two java programs designed to sort loosely typed questions and answers into 
-- properly formatted semantic html and 
-- Excel file (xlsx)
-# Why is this a thing?
-I intended to gather information from some educational institutions (>1000) regarding their policies towards a specific sub-group of students and gave a template for replies. However, I did not account that most people skip peripherals of emails and cut straight to answering questions or finding their course of action. Not just that, but many of the replies skipped some questions almost randomly. Because of this, I could not easily sort clean information into the pages and had to create a work-around to identify what were questions, what were answers and what was to be included in the web pages. This is that workaround.
+# MSAccess-HTML-Excel Parser
+
+MSAccess-HTML-Excel Parser is a set of two Java programs designed to process and organize loosely typed questions and answers from educational institutions into properly formatted semantic HTML and Excel (xlsx) files. This project was created in response to the challenges I faced while gathering information from over 1000 educational institutions regarding their policies towards a specific sub-group of students. The initial email template was not strictly followed, resulting in inconsistent and incomplete replies. These programs provide a workaround to identify questions, answers, and other relevant information and sort them into a more structured and accessible format.
+
+## Features
+
+- Sorts and organizes loosely typed questions and answers into structured data.
+- Generates semantic HTML files for each institution, ensuring consistent formatting and structure.
+- Creates an Excel file (xlsx) to easily visualize and analyze the gathered information.
+- Handle redirects and special cases, ensuring all relevant information is included.
+
+## Note
+
+This repo is provided for portfolio purposes and is not an open source project. This main goal of publishing this repo is to act as a benchmark for my progress since early 2022, and to demonstrate my ability to create effective solutions for handling unstructured and inconsistent data in a real-world scenario. While I could do better today if I took up this task, I'm proud of the work I did here with the limited experience I had.
+
+## Programs
+
+1. **ExcelParser.java**: Reads the input data, organizes it into a structured format, and generates an Excel file (xlsx) containing the organized information for each institution.
+2. **HTMLParser.java**: Processes the input data and creates well-structured semantic HTML files for each institution, ensuring consistent formatting and presentation.
+
+## Getting Started
+
+To use the MSAccess-HTML-Excel Parser, follow these steps:
+
+1. Ensure you have Java installed on your machine.
+2. Clone this repository to your local machine.
+3. Add the input data file `data.txt` containing the information from educational institutions, following the format provided in the example file.
+4. Compile and run the `ExcelParser.java` and `HTMLParser.java` programs.
+5. The generated HTML files will be stored in the `Webpages` directory, and the Excel file will be saved as `CollegeDataTable.xlsx`.
